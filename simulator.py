@@ -21,26 +21,44 @@ class Point(VehicleHolder):
     
 # the vehicle, which follows the graph
 class Vehicle:
-    def __init__(self, pointId, simulator):
+    def __init__(self, point_id, simulator):
         self.id = "vehicle:"+uuid4()
-        pointOn = simulator.reference(pointId)
-        self.x = pointOn.x
-        self.y = pointOn.y
-        self.position = (pointOn.x, pointOn.y)
-        self.pointOnId = pointId  # every car must start at a point
+        point_on = simulator.reference(point_id)
+        self.x = point_on.x
+        self.y = point_on.y
+        self.position = (point_on.x, point_on.y)
+        self.point_on_id = point_id  # every car must start at a point
         self.roadOn = None
         self.movingFrom = None # no car can move at start
         self.movingTo = None # no car can move at start
     
-    def moveTo(self, towardsId, roadId, simulator): # static function 
+    def move(self):
+        """Moves the vehicle in its direction
+        
+        move arguments:
+        Return: None
+        """
+        
+
+    def move_to(self, towards_id, road_id, simulator): # static function 
+        """sets a destination for the vehicle
+        
+        move_to arguments:
+        towards_id -- the id of the Point that the vehicle is moving towards
+        road_id -- the id of the Road the point is using
+        simulator -- the simulator the vehicle is in
+        Return: None
+        """
+        
+
         # check if roads used lead to point
-        if roadId in simulator.roadIds:
+        if road_id in simulator.element_ids:
             road = simulator.reference(id)
-            if self.pointOnId == road.start and towardsId == road.end:
+            if self.point_on_id == road.start and towards_id == road.end:
                 self.roadOn = None
-                self.movingTo = self.pointOn
-                self.pointOn = None
-                self.movingTo = towardsId
+                self.movingTo = self.point_on
+                self.point_on = None
+                self.movingTo = towards_id
 
 # the edges of the graph
 class Road(VehicleHolder):
@@ -57,26 +75,41 @@ class Simulator:
     def __init__(self, points, roads, vehicles):
         self.elements = {}
 
-        elementIds = []
+        element_ids = []
         for point in points:
-            elementIds.append(point.id)
+            element_ids.append(point.id)
             self.elements[point.id] = point
         for road in roads:
-            elementIds.append(road.id)
+            element_ids.append(road.id)
             self.elements[road.id] = road
         for vehicle in vehicles:
-            elementIds.append(vehicle.id)
+            element_ids.append(vehicle.id)
             self.elements[vehicle.id] = vehicle
 
         # for checking the existence of elements of the simulation
-        self.elementIds = set(elementIds)
+        self.element_ids = set(element_ids)
         
-    def addElement(self, element):
-        if not element.id in self.elementIds:
-            self.elementIds[element.id] = element
+    def add_element(self, element):
+        """adds an element to the simulator
+        
+        add_element arguments:
+        element -- the element being added
+        Return: None
+        """
+        
+        if not element.id in self.element_ids:
+            self.element_ids[element.id] = element
         raise IndexError("RepeatValue")
 
     def reference(self, id):
-        if id in self.elementIds:
+        """gets the element that corresponds to the id
+        
+        reference arguments:
+        id -- the element id
+        Return: the element
+        """
+        
+        
+        if id in self.element_ids:
             return self.elements[id]
         raise IndexError("NonePointer")
