@@ -143,7 +143,7 @@ class Simulator:
             return self.elements[id]
         raise IndexError("NonePointer")
     
-    def run(self, call_func=None, timed=False):
+    def run(self, call_func=None):
         """Game loop for the simulator
         
         Keyword arguments:
@@ -159,7 +159,7 @@ class Simulator:
         while gameOn:
             gameOn = decorator(call_func)
 
-            print(f"running! \niterations: {self.iterations}")
-            self.iterations += 1 
-                
-        return decorator
+            
+            
+
+            self.iterations += 1
