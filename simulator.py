@@ -1,7 +1,6 @@
 from uuid import uuid4
 import math
 import random
-from seeder import auto_seed
 """
 Everything outside of the simulator works with ids; to access anything you have to go reference the simulator. This basically simulates pointers for python
 the Simulator class ends up being a reference for every variable
@@ -10,7 +9,7 @@ the Simulator class ends up being a reference for every variable
 # used as a parent class for Point and Road
 class VehicleHolder:
     def __init__(self, type):
-        self.id = type+":"+uuid4() # so i can access every item easily
+        self.id = type+":"+str(uuid4()) # so i can access every item easily
         self.vehicles = [] # the vehicles at this point/road
 
 # the vertices of the graph
@@ -23,19 +22,20 @@ class Point(VehicleHolder):
     
 # the vehicle, which follows the graph
 class Vehicle:
-    def __init__(self, point_id, simulator):
-        self.id = "vehicle:"+uuid4()        
-        self.point_on_id = point_id  # every car must start at a point
+    def __init__(self, point_on_id, destination, simulator):
+        self.id = "vehicle:"+str(uuid4())        
+        self.point_on_id = point_on_id  # every car must start at a point
+        self.destination = destination
         self.roadOn = None
         self.movingFrom = None # no car can move at start
         self.movingTo = None # no car can move at start
 
-        point_on = simulator.reference(point_id)
+        point_on = simulator.reference(point_on_id)
         self.x = point_on.x
         self.y = point_on.y
         self.position = (self.x, self.y)
     
-    def move(self, simulator): # NEEED TO FIX
+    def move(self, simulator): # NEED TO FIX
         """Moves the vehicle in its direction
         
         move arguments:
@@ -96,7 +96,6 @@ class Road(VehicleHolder):
         self.slope_parts = ((end_y - start_y), (end_x - start_x)) # the slope is used for moving the vehicle
         self.distance = math.sqrt((end_y - start_y) + (end_x - start_x)) # pythagorean theorem
         
-
 class Simulator:
     def __init__(self, points, roads, vehicles, seed=None):
         self.iterations = 1
