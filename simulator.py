@@ -1,6 +1,7 @@
 from uuid import uuid4
 import math
-import time
+import random
+from seeder import auto_seed
 """
 Everything outside of the simulator works with ids; to access anything you have to go reference the simulator. This basically simulates pointers for python
 the Simulator class ends up being a reference for every variable
@@ -14,12 +15,11 @@ class VehicleHolder:
 
 # the vertices of the graph
 class Point(VehicleHolder):
-    def __init__(self, x, y, popularity):
+    def __init__(self, x, y):
         super().__init__("point")
         self.x = x
         self.y = y
         self.position = (x, y)
-        self.popularity = popularity # weighted randomness
     
 # the vehicle, which follows the graph
 class Vehicle:
@@ -35,7 +35,7 @@ class Vehicle:
         self.y = point_on.y
         self.position = (self.x, self.y)
     
-    def move(self, simulator):
+    def move(self, simulator): # NEEED TO FIX
         """Moves the vehicle in its direction
         
         move arguments:
@@ -98,8 +98,10 @@ class Road(VehicleHolder):
         
 
 class Simulator:
-    def __init__(self, points, roads, vehicles):
+    def __init__(self, points, roads, vehicles, seed=None):
         self.iterations = 1
+        if seed:
+            points, roads, vehicles = auto_seed(seed=seed)
         self.points = points
         self.roads = roads
         self.vehicles = vehicles
@@ -147,19 +149,18 @@ class Simulator:
         """Game loop for the simulator
         
         Keyword arguments:
-        call_func -- the function the simulator runs, the simulator passes the elements of the simulator and the amount of times it has run. if nothing is given, a function is created by the simulator (FUNCTION MUST TELL THE SIMULATOR WHEN IT ENDS)
+        call_func -- the function the simulator runs, the simulator passes the elements of the simulator and the amount of times it has run. if nothing is given, a function is created by the simulator (FUNCTION MUST RETURN A VALUE VERY TIME IT IS RAN AND TELL THE SIMULATOR WHEN IT ENDS)
         timed -- does the simulator run all at once, or runs per second
         Return: nothing, only prints
         """    
         gameOn = True
 
         def decorator(func):
-            return func(self.elements, self.iterations)
+            return func(self.elements, self.iterations, self)
 
         while gameOn:
             gameOn = decorator(call_func)
 
-            
-            
+            print("the loop works...at least")
 
             self.iterations += 1
