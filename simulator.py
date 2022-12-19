@@ -1,4 +1,6 @@
 from uuid import uuid4
+import math
+import time
 """
 Everything outside of the simulator works with ids; to access anything you have to go reference the simulator. This basically simulates pointers for python
 the Simulator class ends up being a reference for every variable
@@ -22,22 +24,43 @@ class Point(VehicleHolder):
 # the vehicle, which follows the graph
 class Vehicle:
     def __init__(self, point_id, simulator):
-        self.id = "vehicle:"+uuid4()
-        point_on = simulator.reference(point_id)
-        self.x = point_on.x
-        self.y = point_on.y
-        self.position = (point_on.x, point_on.y)
+        self.id = "vehicle:"+uuid4()        
         self.point_on_id = point_id  # every car must start at a point
         self.roadOn = None
         self.movingFrom = None # no car can move at start
         self.movingTo = None # no car can move at start
+
+        point_on = simulator.reference(point_id)
+        self.x = point_on.x
+        self.y = point_on.y
+        self.position = (self.x, self.y)
     
-    def move(self):
+    def move(self, simulator):
         """Moves the vehicle in its direction
         
         move arguments:
-        Return: None
+        simulator -- the simulator the vehicle is in
+        Return: (if the vehicle is at the station, self.x, self.y, endPoint.y)
         """
+        
+        if self.roadOn:
+            endPoint = simulator.reference(self.movingTo)
+            rise, run = simulator.reference(self.roadOn).slope_parts
+            slope = rise / run # lol
+            
+            # change x by one unit and y by slope units
+            x_move = run/abs(run) # -1 or 1
+            y_move = slope * x_move # -slope or slope
+            
+            # moves the vehicle
+            self.x += x_move
+            self.y += y_move
+            self.position = (self.x, self.y)
+            
+        else:
+            raise IndexError("VehicleNotMoving")
+        
+        return (((self.x + x_move) == endPoint.x), self.x, self.y, endPoint.y) # returns important values and if the vehicle is at the destination
         
 
     def move_to(self, towards_id, road_id, simulator): # static function 
@@ -49,7 +72,6 @@ class Vehicle:
         simulator -- the simulator the vehicle is in
         Return: None
         """
-        
 
         # check if roads used lead to point
         if road_id in simulator.element_ids:
@@ -62,19 +84,27 @@ class Vehicle:
 
 # the edges of the graph
 class Road(VehicleHolder):
-    def __init__(self, startId, endId, speed=0):
+    def __init__(self, start_id, end_id, simulator, speed=0): # add curved roads?
         super().__init__("road")
-        self.start = startId
-        self.end = endId
+        self.start = start_id
+        self.end = end_id
         self.speed = speed # might not be needed
-        self.distance = 0 # need to calculate
 
+        start_x, start_y = simulator.reference(start_id).position
+        end_x, end_y = simulator.reference(end_id).position
+        
+        self.slope_parts = ((end_y - start_y), (end_x - start_x)) # the slope is used for moving the vehicle
+        self.distance = math.sqrt((end_y - start_y) + (end_x - start_x)) # pythagorean theorem
         
 
 class Simulator:
     def __init__(self, points, roads, vehicles):
-        self.elements = {}
+        self.iterations = 0
+        self.points = points
+        self.roads = roads
+        self.vehicles = vehicles
 
+        self.elements = {}
         element_ids = []
         for point in points:
             element_ids.append(point.id)
@@ -107,9 +137,27 @@ class Simulator:
         reference arguments:
         id -- the element id
         Return: the element
-        """
-        
+        """  
         
         if id in self.element_ids:
             return self.elements[id]
         raise IndexError("NonePointer")
+    
+    def run(self, call_func=None, timed=False):
+        """Game loop for the simulator
+        
+        Keyword arguments:
+        call_func -- the function the simulator runs, the simulator passes the elements of the simulator and the amount of times it has run. if nothing is given, a function is created by the simulator (FUNCTION MUST TELL THE SIMULATOR WHEN IT ENDS)
+        timed -- does the simulator run all at once, or runs per second
+        Return: nothing, only prints
+        """
+        gameOn = True
+
+        while gameOn:
+            if call_func:
+                gameOn = call_func(self.elements, self.iterations)
+            else:
+                gameOn = self.iterations != 10
+            
+            print(f"running! \niterations: {self.iterations}")
+            self.iterations += 1
