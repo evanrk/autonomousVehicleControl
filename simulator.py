@@ -99,7 +99,7 @@ class Road(VehicleHolder):
 
 class Simulator:
     def __init__(self, points, roads, vehicles):
-        self.iterations = 0
+        self.iterations = 1
         self.points = points
         self.roads = roads
         self.vehicles = vehicles
@@ -150,14 +150,16 @@ class Simulator:
         call_func -- the function the simulator runs, the simulator passes the elements of the simulator and the amount of times it has run. if nothing is given, a function is created by the simulator (FUNCTION MUST TELL THE SIMULATOR WHEN IT ENDS)
         timed -- does the simulator run all at once, or runs per second
         Return: nothing, only prints
-        """
+        """    
         gameOn = True
 
+        def decorator(func):
+            return func(self.elements, self.iterations)
+
         while gameOn:
-            if call_func:
-                gameOn = call_func(self.elements, self.iterations)
-            else:
-                gameOn = self.iterations != 10
-            
+            gameOn = decorator(call_func)
+
             print(f"running! \niterations: {self.iterations}")
-            self.iterations += 1
+            self.iterations += 1 
+                
+        return decorator
