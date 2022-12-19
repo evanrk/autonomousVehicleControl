@@ -97,40 +97,52 @@ class Road(VehicleHolder):
         self.distance = math.sqrt((end_y - start_y) + (end_x - start_x)) # pythagorean theorem
         
 class Simulator:
-    def __init__(self, points, roads, vehicles, seed=None):
+    def __init__(self, seed=None):
         self.iterations = 1
-        if seed:
-            points, roads, vehicles = auto_seed(seed=seed)
-        self.points = points
-        self.roads = roads
-        self.vehicles = vehicles
+        self.points = []
+        self.roads = []
+        self.vehicles = []
+        self.seed = seed
 
         self.elements = {}
+        self.element_ids = {} # will be a set
+    
+    def update(self):
         element_ids = []
-        for point in points:
+        for point in self.points:
             element_ids.append(point.id)
             self.elements[point.id] = point
-        for road in roads:
+        for road in self.roads:
             element_ids.append(road.id)
             self.elements[road.id] = road
-        for vehicle in vehicles:
+        for vehicle in self.vehicles:
             element_ids.append(vehicle.id)
             self.elements[vehicle.id] = vehicle
 
         # for checking the existence of elements of the simulation
         self.element_ids = set(element_ids)
-        
-    def add_element(self, element):
+
+    def add_elements(self, elements):
         """adds an element to the simulator
         
         add_element arguments:
         element -- the element being added
         Return: None
         """
+        for element in elements:
+            if not element.id in self.element_ids:
+                self.element_ids[element.id] = element
+                if element.id.split(":")[0] == "point":
+                    self.points.append(element)
+                elif element.id.split(":")[0] == "road":
+                    self.roads.append(element)
+                elif element.id.split(":")[0] == "vehicle":
+                    self.vehicles.append(element)
+                else:
+                    raise TypeError("Type not found")
+            raise IndexError("RepeatValue")
         
-        if not element.id in self.element_ids:
-            self.element_ids[element.id] = element
-        raise IndexError("RepeatValue")
+        self.update()
 
     def reference(self, id):
         """gets the element that corresponds to the id
