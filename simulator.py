@@ -19,6 +19,8 @@ class Point(VehicleHolder):
         self.x = x
         self.y = y
         self.position = (x, y)
+        self.roads = []
+
     
 # the vehicle, which follows the graph
 class Vehicle:
@@ -99,27 +101,38 @@ class Road(VehicleHolder):
 class Simulator:
     def __init__(self):
         self.iterations = 1
-        self.points = []
-        self.roads = []
-        self.vehicles = []
+        # self.points = []
+        # self.roads = []
+        # self.vehicles = []
 
         self.elements = {}
         self.element_ids = {}
 
-    # def update(self):
-    #     element_ids = []
-    #     for point in self.points:
-    #         element_ids.append(point.id)
-    #         self.elements[point.id] = point
-    #     for road in self.roads:
-    #         element_ids.append(road.id)
-    #         self.elements[road.id] = road
-    #     for vehicle in self.vehicles:
-    #         element_ids.append(vehicle.id)
-    #         self.elements[vehicle.id] = vehicle
 
-        # for checking the existence of elements of the simulation
-        # self.element_ids = set(element_ids)
+    def points(self):
+        points = []
+        for id, element in self.elements.items():
+            type = id.split(":")[0]
+            if type == "point":
+                points.append(element)
+        return points
+    
+    def roads(self):
+        roads = []
+        for id, element in self.elements.items():
+            type = id.split(":")[0]
+            if type == "road":
+                roads.append(element)
+        return roads
+
+    def vehicles(self):
+        vehicles = []
+        for id, element in self.elements.items():
+            type = id.split(":")[0]
+            if type == "vehicle":
+                vehicles.append(element)
+        return vehicles
+                
 
     def add_elements(self, elements):
         """adds an element to the simulator
@@ -133,15 +146,15 @@ class Simulator:
             if not (element.id in self.element_ids):
                 self.elements[element.id] = element
                 element_ids.append(element.id)
-                type = element.id.split(":")[0]
-                if type == "point":
-                    self.points.append(element)
-                elif type == "road":
-                    self.roads.append(element)
-                elif type == "vehicle":
-                    self.vehicles.append(element)
-                else:
-                    raise TypeError("Wrong type")
+                # type = element.id.split(":")[0]
+                # if type == "point":
+                #     self.points.append(element)
+                # elif type == "road":
+                #     self.roads.append(element)
+                # elif type == "vehicle":
+                #     self.vehicles.append(element)
+                # else:
+                #     raise TypeError("Wrong type")
                 
             else:
                 raise IndexError(f"RepeatValue {element.id}")
@@ -166,17 +179,49 @@ class Simulator:
         
         Keyword arguments:
         call_func -- the function the simulator runs, the simulator passes the elements of the simulator and the amount of times it has run. if nothing is given, a function is created by the simulator (FUNCTION MUST RETURN A VALUE VERY TIME IT IS RAN AND TELL THE SIMULATOR WHEN IT ENDS)
-        timed -- does the simulator run all at once, or runs per second
         Return: nothing, only prints
         """    
         gameOn = True
 
         def decorator(func):
-            return func(self.points, self.roads, self.vehicles, self.iterations, self)
+            return func(self, self.iterations)
 
         while gameOn:
             gameOn = decorator(call_func)
 
-            print("the loop works...at least")
-
             self.iterations += 1
+    
+    def edit_point(self, id, x=None, y=None, add_road=None, add_vehicle=None):
+        type = id.split(":")[0]
+        if type != "point":
+            raise TypeError("Type is not a point lmao")
+        else:
+            point = self.reference(id)
+            if x:
+                point.x = x
+            if y:
+                point.y = y
+            if add_road:
+                roads = point.roads
+                roads.append(add_road)
+                point.roads = roads
+            if add_vehicle:
+                vehicles = point.vehicles
+                vehicles.append(add_vehicle)
+                point.vehicles = vehicles
+            
+            # replace the old point with the updated point
+            self.elements[id] = point
+            # print(self.elements[id].vehicles)
+    
+    def add_vehicle(self, id, vehicle_id):
+        type = id.split(":")[0]
+        if type not in ("point", "road"):
+            raise TypeError("Type is not a point or a road smh")
+        else:
+            vehicle_holder = self.reference(id)
+            vehicle_holder.vehicles.append(vehicle_id)
+            
+            # add replace the old vehicle holder element with the updated one
+            self.elements[id] = vehicle_holder
+            # print(self.elements[id].vehicles)

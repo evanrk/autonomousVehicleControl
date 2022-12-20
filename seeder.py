@@ -67,6 +67,10 @@ class Seeder:
             
             destination = new_points[random.randint(0, len(new_points)-1)]
 
-            self.vehicles.append(Vehicle(point_on_id, destination, self.simulator))
+            vehicle = Vehicle(point_on_id, destination, self.simulator) # has to be instantiated to get id
+            # add to Point.vehicles IMPORTANT <<-------AASDJHFLKASHDJLKF
+            self.simulator.edit_point(point_on_id, add_vehicle=vehicle.id)
+
+            self.vehicles.append(vehicle)
         
         return self.vehicles

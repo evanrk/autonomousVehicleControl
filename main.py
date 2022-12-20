@@ -13,9 +13,12 @@ simulator.add_elements(vehicles)
 
 # run the code using the decorator from simulator.py
 @simulator.run
-def logic_func(points, roads, vehicles, iterations, simulator):
-    print(f"num points: {len(simulator.points)}") 
-    print(f"num roads: {len(simulator.roads)}") 
-    print(f"num vehicles: {len(simulator.vehicles)}") # should be empty for now
+def logic_func(simulator, iterations):
+    for point in simulator.points():
+        print(point.vehicles)
+        # print(point.roads)
+    print(f"num points: {len(simulator.points())}") 
+    print(f"num roads: {len(simulator.roads())}") 
+    print(f"num vehicles: {len(simulator.vehicles())}") # should be empty for now
     print("hi from the logic func")
-    return iterations != 10
+    return iterations != 1 # amount of time the sim runs for
