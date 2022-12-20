@@ -77,8 +77,8 @@ class Vehicle:
         if road_id in simulator.element_ids:
             road = simulator.reference(id)
             if self.point_on_id == road.start and towards_id == road.end:
-                self.roadOn = None
-                self.movingTo = self.point_on
+                self.roadOn = road_id
+                self.movingFrom = self.point_on
                 self.point_on = None
                 self.movingTo = towards_id
 
@@ -94,43 +94,60 @@ class Road(VehicleHolder):
         end_x, end_y = simulator.reference(end_id).position
         
         self.slope_parts = ((end_y - start_y), (end_x - start_x)) # the slope is used for moving the vehicle
-        self.distance = math.sqrt((end_y - start_y) + (end_x - start_x)) # pythagorean theorem
+        self.distance = math.sqrt(abs(end_y - start_y) + abs(end_x - start_x)) # pythagorean theorem
         
 class Simulator:
-    def __init__(self, points, roads, vehicles, seed=None):
+    def __init__(self):
         self.iterations = 1
-        if seed:
-            points, roads, vehicles = auto_seed(seed=seed)
-        self.points = points
-        self.roads = roads
-        self.vehicles = vehicles
+        self.points = []
+        self.roads = []
+        self.vehicles = []
 
         self.elements = {}
-        element_ids = []
-        for point in points:
-            element_ids.append(point.id)
-            self.elements[point.id] = point
-        for road in roads:
-            element_ids.append(road.id)
-            self.elements[road.id] = road
-        for vehicle in vehicles:
-            element_ids.append(vehicle.id)
-            self.elements[vehicle.id] = vehicle
+        self.element_ids = {}
+
+    # def update(self):
+    #     element_ids = []
+    #     for point in self.points:
+    #         element_ids.append(point.id)
+    #         self.elements[point.id] = point
+    #     for road in self.roads:
+    #         element_ids.append(road.id)
+    #         self.elements[road.id] = road
+    #     for vehicle in self.vehicles:
+    #         element_ids.append(vehicle.id)
+    #         self.elements[vehicle.id] = vehicle
 
         # for checking the existence of elements of the simulation
-        self.element_ids = set(element_ids)
-        
-    def add_element(self, element):
+        # self.element_ids = set(element_ids)
+
+    def add_elements(self, elements):
         """adds an element to the simulator
         
         add_element arguments:
         element -- the element being added
         Return: None
         """
+        element_ids = list(self.element_ids)
+        for element in elements:
+            if not (element.id in self.element_ids):
+                self.elements[element.id] = element
+                element_ids.append(element.id)
+                type = element.id.split(":")[0]
+                if type == "point":
+                    self.points.append(element)
+                elif type == "road":
+                    self.roads.append(element)
+                elif type == "vehicle":
+                    self.vehicles.append(element)
+                else:
+                    raise TypeError("Wrong type")
+                
+            else:
+                raise IndexError(f"RepeatValue {element.id}")
+            self.element_ids = set(element_ids)
         
-        if not element.id in self.element_ids:
-            self.element_ids[element.id] = element
-        raise IndexError("RepeatValue")
+
 
     def reference(self, id):
         """gets the element that corresponds to the id
@@ -155,7 +172,7 @@ class Simulator:
         gameOn = True
 
         def decorator(func):
-            return func(self.elements, self.iterations, self)
+            return func(self.points, self.roads, self.vehicles, self.iterations, self)
 
         while gameOn:
             gameOn = decorator(call_func)
