@@ -15,8 +15,8 @@ simulator.add_elements(vehicles)
 @simulator.run
 def logic_func(simulator, iterations):
     for point in simulator.points():
-        print(point.vehicles)
-        # print(point.roads)
+        # print(point.vehicles)
+        print(point.roads)
     print(f"num points: {len(simulator.points())}") 
     print(f"num roads: {len(simulator.roads())}") 
     print(f"num vehicles: {len(simulator.vehicles())}") # should be empty for now

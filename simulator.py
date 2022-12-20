@@ -202,13 +202,9 @@ class Simulator:
             if y:
                 point.y = y
             if add_road:
-                roads = point.roads
-                roads.append(add_road)
-                point.roads = roads
+                point.roads.append(add_road)
             if add_vehicle:
-                vehicles = point.vehicles
-                vehicles.append(add_vehicle)
-                point.vehicles = vehicles
+                point.vehicles.append(add_vehicle)
             
             # replace the old point with the updated point
             self.elements[id] = point
@@ -224,4 +220,3 @@ class Simulator:
             
             # add replace the old vehicle holder element with the updated one
             self.elements[id] = vehicle_holder
-            # print(self.elements[id].vehicles)

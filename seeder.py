@@ -37,18 +37,28 @@ class Seeder:
         # every point must have one road + 1 extra, at least
         for index in range(num_points):
             new_points = self.points[:]
-            start_point = new_points.pop(index) # same point cant be chosen twice
+            
+            start_point_id = new_points.pop(index).id # same point cant be chosen twice
+            end_point_id = new_points[random.randint(0, len(new_points)-1)].id # end point
+            
+            road = Road(start_point_id, end_point_id, self.simulator)
 
-            end_point = new_points[random.randint(0, len(new_points)-1)] # end point
-            self.roads.append(Road(start_point.id, end_point.id, self.simulator))
+            self.simulator.edit_point(start_point_id, add_road=road.id) # update the start point of the road
+            self.simulator.edit_point(end_point_id, add_road=road.id) # update the end point of the road
+            self.roads.append(road)
 
         # make the roads
         for _ in range(num_roads):
             new_points = self.points[:]
             rand_index = random.randint(0, len(new_points)-1) # chooses a start point
-            start_point = new_points.pop(rand_index) # makes sure the same point cant be chosen twice
-            end_point = new_points[random.randint(0, len(new_points)-1)] # chooses an end point
-            self.roads.append(Road(start_point.id, end_point.id, self.simulator))
+            start_point_id = new_points.pop(rand_index).id # makes sure the same point cant be chosen twice
+            end_point_id = new_points[random.randint(0, len(new_points)-1)].id # chooses an end point
+            
+            road = Road(start_point_id, end_point_id, self.simulator)
+            
+            self.simulator.edit_point(start_point_id, road.id) # update the start point of the road
+            self.simulator.edit_point(end_point_id, road.id) # update the end point of the road
+            self.roads.append(road)
 
         return self.roads
 
@@ -68,9 +78,9 @@ class Seeder:
             destination = new_points[random.randint(0, len(new_points)-1)]
 
             vehicle = Vehicle(point_on_id, destination, self.simulator) # has to be instantiated to get id
-            # add to Point.vehicles IMPORTANT <<-------AASDJHFLKASHDJLKF
-            self.simulator.edit_point(point_on_id, add_vehicle=vehicle.id)
-
+            
+            # updates the vehicle and adds the vehicle to the seeders vehicles list
+            self.simulator.add_vehicle(point_on_id, vehicle.id)
             self.vehicles.append(vehicle)
         
         return self.vehicles
