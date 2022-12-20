@@ -194,7 +194,7 @@ class Simulator:
     def edit_point(self, id, x=None, y=None, add_road=None, add_vehicle=None):
         type = id.split(":")[0]
         if type != "point":
-            raise TypeError("Type is not a point lmao")
+            raise TypeError("Type is not a point type lmao")
         else:
             point = self.reference(id)
             if x:
@@ -213,7 +213,7 @@ class Simulator:
     def add_vehicle(self, id, vehicle_id):
         type = id.split(":")[0]
         if type not in ("point", "road"):
-            raise TypeError("Type is not a point or a road smh")
+            raise TypeError("Type is not a point or road type smh")
         else:
             vehicle_holder = self.reference(id)
             vehicle_holder.vehicles.append(vehicle_id)
