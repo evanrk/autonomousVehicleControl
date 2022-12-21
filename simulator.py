@@ -28,42 +28,55 @@ class Vehicle:
         self.id = "vehicle:"+str(uuid4())        
         self.point_on_id = point_on_id  # every car must start at a point
         self.destination = destination
-        self.roadOn = None
-        self.movingFrom = None # no car can move at start
-        self.movingTo = None # no car can move at start
+        self.road_on = None
+        self.moving_to = None # no car can move at start
+
 
         point_on = simulator.reference(point_on_id)
         self.x = point_on.x
         self.y = point_on.y
-        self.position = (self.x, self.y)
+
+        self.total_moves = 0
     
-    def move(self, simulator): # NEED TO FIX
-        """Moves the vehicle in its direction
+    # def move(self, simulator): # NEED TO FIX
+    #     """Moves the vehicle in its direction
         
-        move arguments:
-        simulator -- the simulator the vehicle is in
-        Return: (if the vehicle is at the station, self.x, self.y, endPoint.y)
-        """
+    #     move arguments:
+    #     simulator -- the simulator the vehicle is in
+    #     Return: (if the vehicle is at the station, self.x, self.y, endPoint.y)
+    #     """
         
-        if self.roadOn:
-            endPoint = simulator.reference(self.movingTo)
-            rise, run = simulator.reference(self.roadOn).slope_parts
-            slope = rise / run # lol
+    #     if self.road_on:
+    #         endPoint = simulator.reference(self.moving_to)
+    #         rise, run = simulator.reference(self.road_on).slope_parts
+    #         slope = rise / run # lol
             
-            # change x by one unit and y by slope units
-            x_move = run/abs(run) # -1 or 1
-            y_move = slope * x_move # -slope or slope
+    #         # change x by one unit and y by slope units
+    #         x_move = run/abs(run) # -1 or 1
+    #         y_move = slope * x_move # -slope or slope
             
-            # moves the vehicle
-            self.x += x_move
-            self.y += y_move
-            self.position = (self.x, self.y)
+    #         # moves the vehicle
+    #         self.x += x_move
+    #         self.y += y_move
+    
             
+    #     else:
+    #         raise IndexError("VehicleNotMoving")
+        
+    #     return (((self.x + x_move) == endPoint.x), self.x, self.y, endPoint.y) # returns important values and if the vehicle is at the destination
+
+    def move(self, simulator):
+        if self.road_on:
+            self.total_moves += 1
+            self.point_on_id = self.moving_to
+            self.moving_to = None
+
+            point_on = simulator.reference(self.point_on_id)
+            self.x = point_on.x
+            self.y = point_on.y
+            self.road_on = None
         else:
-            raise IndexError("VehicleNotMoving")
-        
-        return (((self.x + x_move) == endPoint.x), self.x, self.y, endPoint.y) # returns important values and if the vehicle is at the destination
-        
+            raise IndexError("Vehicle not moving")
 
     def move_to(self, towards_id, road_id, simulator): # static function 
         """sets a destination for the vehicle
@@ -77,12 +90,14 @@ class Vehicle:
 
         # check if roads used lead to point
         if road_id in simulator.element_ids:
-            road = simulator.reference(id)
+            road = simulator.reference(road_id)
+            print(f"{self.point_on_id}\t\t\t {road.start}")
+            print(self.point_on_id == road.start)
             if self.point_on_id == road.start and towards_id == road.end:
-                self.roadOn = road_id
-                self.movingFrom = self.point_on
+                self.road_on = road_id
                 self.point_on = None
-                self.movingTo = towards_id
+                self.moving_to = towards_id
+                self.moving = True
 
 # the edges of the graph
 class Road(VehicleHolder):
@@ -156,24 +171,68 @@ class Simulator:
                 # else:
                 #     raise TypeError("Wrong type")
                 
-            else:
-                raise IndexError(f"RepeatValue {element.id}")
+            # else:
+                # raise IndexError(f"RepeatValue {element.id}")
             self.element_ids = set(element_ids)
         
 
 
-    def reference(self, id):
+    def reference(self, element_id):
         """gets the element that corresponds to the id
         
         reference arguments:
-        id -- the element id
+        element_id -- the element id
         Return: the element
         """  
         
-        if id in self.element_ids:
-            return self.elements[id]
-        raise IndexError("NonePointer")
+        if element_id in self.element_ids:
+            return self.elements[element_id]
+        else:
+            print(self.element_ids)
+            print(element_id)
+            raise IndexError("NonePointer")
     
+
+    def edit_point(self, id, x=None, y=None, add_road=None, add_vehicle=None):
+        type = id.split(":")[0]
+        if type != "point":
+            raise TypeError("Type is not a point type")
+        else:
+            point = self.reference(id)
+            if x:
+                point.x = x
+            if y:
+                point.y = y
+            if add_road:
+                point.roads.append(add_road)
+                print(f"ln 210 {point.id}\t\t\t {self.reference(add_road).start}")
+            if add_vehicle:
+                point.vehicles.append(add_vehicle)
+            
+            # replace the old point with the updated point
+            self.elements[id] = point
+            # print(self.elements[id].vehicles)
+    
+
+    def add_vehicle(self, id, vehicle_id):
+        type = id.split(":")[0]
+        if type not in ("point", "road"):
+            raise TypeError("Type is not a point or road type smh")
+        else:
+            vehicle_holder = self.reference(id)
+            vehicle_holder.vehicles.append(vehicle_id)
+            
+            # add replace the old vehicle holder element with the updated one
+            self.elements[id] = vehicle_holder
+
+    def update_vehicle(self, id, new_vehicle):
+        type = id.split(":")[0]
+        if type == "vehicle":
+            self.elements[id] = new_vehicle
+        else:
+            raise TypeError("Not a vehicle type")
+            
+
     def run(self, call_func=None):
         """Game loop for the simulator
         
@@ -187,36 +246,15 @@ class Simulator:
             return func(self, self.iterations)
 
         while gameOn:
+            print("-"*50+f"\nMove {self.iterations}:")
+            for id, element in self.elements.items():
+                type = id.split(":")[0]
+                if type == "vehicle":
+                    if element.point_on_id == element.destination:
+                        print(f"{id}:\n{element.total_moves}")
+                    if element.road_on:
+                        element.move(self)
+                        print(f"Moved: {element} to {element.point_on_id}")
             gameOn = decorator(call_func)
 
-            self.iterations += 1
-    
-    def edit_point(self, id, x=None, y=None, add_road=None, add_vehicle=None):
-        type = id.split(":")[0]
-        if type != "point":
-            raise TypeError("Type is not a point type lmao")
-        else:
-            point = self.reference(id)
-            if x:
-                point.x = x
-            if y:
-                point.y = y
-            if add_road:
-                point.roads.append(add_road)
-            if add_vehicle:
-                point.vehicles.append(add_vehicle)
-            
-            # replace the old point with the updated point
-            self.elements[id] = point
-            # print(self.elements[id].vehicles)
-    
-    def add_vehicle(self, id, vehicle_id):
-        type = id.split(":")[0]
-        if type not in ("point", "road"):
-            raise TypeError("Type is not a point or road type smh")
-        else:
-            vehicle_holder = self.reference(id)
-            vehicle_holder.vehicles.append(vehicle_id)
-            
-            # add replace the old vehicle holder element with the updated one
-            self.elements[id] = vehicle_holder
+            self.iterations += 1 # next move

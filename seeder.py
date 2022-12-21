@@ -43,6 +43,10 @@ class Seeder:
             
             road = Road(start_point_id, end_point_id, self.simulator)
 
+            self.roads.append(road)
+
+            self.simulator.add_elements([road])
+
             self.simulator.edit_point(start_point_id, add_road=road.id) # update the start point of the road
             self.simulator.edit_point(end_point_id, add_road=road.id) # update the end point of the road
             self.roads.append(road)
@@ -56,10 +60,11 @@ class Seeder:
             
             road = Road(start_point_id, end_point_id, self.simulator)
             
-            self.simulator.edit_point(start_point_id, road.id) # update the start point of the road
-            self.simulator.edit_point(end_point_id, road.id) # update the end point of the road
-            self.roads.append(road)
+            self.simulator.add_elements([road])
 
+            self.simulator.edit_point(start_point_id, add_road=road.id) # update the start point of the road
+            self.simulator.edit_point(end_point_id, add_road=road.id) # update the end point of the road
+            self.roads.append(road)
         return self.roads
 
     def seed_vehicles(self, num_vehicles=None):
@@ -80,6 +85,7 @@ class Seeder:
             vehicle = Vehicle(point_on_id, destination, self.simulator) # has to be instantiated to get id
             
             # updates the vehicle and adds the vehicle to the seeders vehicles list
+            self.simulator.add_elements([vehicle])
             self.simulator.add_vehicle(point_on_id, vehicle.id)
             self.vehicles.append(vehicle)
         
